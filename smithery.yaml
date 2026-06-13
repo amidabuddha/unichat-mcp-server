@@ -11,11 +11,22 @@ startCommand:
     properties:
       unichatModel:
         type: string
-        description: The model to be used by Unichat (e.g., 'gpt-4o-mini').
+        description: The model to be used by Unichat (e.g., 'gpt-5.4-mini').
       unichatApiKey:
         type: string
         description: The API key for accessing Unichat services.
+      unichatBaseUrl:
+        type: string
+        description: Optional OpenAI-compatible API base URL for custom providers.
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
-    (config) => ({ command: 'uv', args: ['run', 'unichat-mcp-server'], env: { UNICHAT_MODEL: config.unichatModel, UNICHAT_API_KEY: config.unichatApiKey } })
+    (config) => ({
+      command: 'uv',
+      args: ['run', 'unichat-mcp-server'],
+      env: {
+        UNICHAT_MODEL: config.unichatModel,
+        UNICHAT_API_KEY: config.unichatApiKey,
+        ...(config.unichatBaseUrl ? { UNICHAT_BASE_URL: config.unichatBaseUrl } : {}),
+      },
+    })

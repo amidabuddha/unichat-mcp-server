@@ -21,15 +21,20 @@ MODEL = os.getenv("UNICHAT_MODEL")
 if not MODEL:
     logger.error("UNICHAT_MODEL environment variable not found")
     raise ValueError("UNICHAT_MODEL environment variable required")
-if not any(MODEL in models_list for models_list in unichat.MODELS_LIST.values()):
+
+UNICHAT_BASE_URL = os.getenv("UNICHAT_BASE_URL") or None
+if UNICHAT_BASE_URL:
+    logger.info("Using custom OpenAI-compatible base URL for Unichat")
+elif not any(MODEL in models_list for models_list in unichat.MODELS_LIST.values()):
     logger.error(f"Invalid model specified: {MODEL}")
     raise ValueError(f"Unsupported model: {MODEL}")
+
 UNICHAT_API_KEY = os.getenv("UNICHAT_API_KEY")
 if not UNICHAT_API_KEY:
     logger.error("UNICHAT_API_KEY environment variable not found")
     raise ValueError("UNICHAT_API_KEY environment variable required")
 
-chat_api = unichat.UnifiedChatApi(api_key=UNICHAT_API_KEY)
+chat_api = unichat.UnifiedChatApi(api_key=UNICHAT_API_KEY, base_url=UNICHAT_BASE_URL)
 
 def validate_messages(messages):
     logger.debug(f"Validating messages: {len(messages)} messages received")
@@ -276,7 +281,7 @@ async def main():
             write_stream,
             InitializationOptions(
                 server_name="unichat-mcp-server",
-                server_version="0.2.18",
+                server_version="0.2.20",
                 capabilities=server.get_capabilities(
                     notification_options=NotificationOptions(),
                     experimental_capabilities={},

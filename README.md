@@ -23,7 +23,7 @@ Also available in [TypeScript](https://github.com/amidabuddha/unichat-ts-mcp-ser
   </a>
  </h4>
 
-Send requests to OpenAI, MistralAI, Anthropic, xAI, Google AI, DeepSeek, Alibaba, Inception using MCP protocol via tool or predefined prompts.
+Send requests to OpenAI, Anthropic, and OpenAI-compatible providers using MCP protocol via tool or predefined prompts. For OpenAI-compatible providers such as MistralAI, xAI, Google AI, DeepSeek, Alibaba, or Inception, set `UNICHAT_BASE_URL` to the provider's compatible API endpoint.
 Vendor API key required
 
 ### Tools
@@ -68,10 +68,22 @@ On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
 **Example:**
 ```json
 "env": {
-  "UNICHAT_MODEL": "gpt-4o-mini",
+  "UNICHAT_MODEL": "gpt-5.4-mini",
   "UNICHAT_API_KEY": "YOUR_OPENAI_API_KEY"
 }
 ```
+
+For OpenAI-compatible providers with custom endpoints:
+```json
+"env": {
+  "UNICHAT_MODEL": "PROVIDER_MODEL",
+  "UNICHAT_API_KEY": "YOUR_PROVIDER_API_KEY",
+  "UNICHAT_BASE_URL": "https://provider.example.com/v1"
+}
+```
+
+When `UNICHAT_BASE_URL` is set, the server accepts the configured `UNICHAT_MODEL` without checking it against Unichat's built-in model list.
+
 Development/Unpublished Servers Configuration
 ```json
 "mcpServers": {
