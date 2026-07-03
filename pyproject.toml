@@ -1,10 +1,10 @@
 [project]
 name = "unichat-mcp-server"
-version = "0.2.20"
+version = "0.2.21"
 description = "Unichat MCP Server"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [ "mcp>=1.0.0","unichat>=4.3.4,<5"]
+dependencies = [ "mcp>=1.0.0","unichat>=4.3.7,<5"]
 [[project.authors]]
 name = "Stefan"
 email = "shear.0-corned@icloud.com"
