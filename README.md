@@ -93,6 +93,7 @@ Development/Unpublished Servers Configuration
       "--directory",
       "{{your source code local directory}}/unichat-mcp-server",
       "run",
+      "--locked",
       "unichat-mcp-server"
     ],
     "env": {
@@ -129,31 +130,89 @@ npx -y @smithery/cli install unichat-mcp-server --client claude
 
 ## Development
 
-### Building and Publishing
+### Clean installation from source
 
-To prepare the package for distribution:
+Prerequisites: Git, Python 3.11 or newer (as declared in `pyproject.toml`), and `uv` available on your PATH. Node.js/npm is only needed for the optional MCP Inspector below. The shell examples use Bash/Zsh syntax.
 
-1. Remove older builds:
+Clone the repository and restore its locked dependencies:
+
 ```bash
-rm -rf dist
+git clone https://github.com/amidabuddha/unichat-mcp-server.git
+cd unichat-mcp-server
+uv sync --locked
 ```
 
-2. Sync dependencies and update lockfile:
+`uv sync --locked` creates the project-local `.venv/`, installs the project in editable mode and restores dependencies from `uv.lock`. It fails if the lockfile needs updating instead of silently changing it. No virtual-environment activation or global Python dependency installation is required when using `uv run`.
+
+Set the same environment variables used in the Claude Desktop examples, replacing the placeholders with your provider's values:
+
 ```bash
-uv sync
+export UNICHAT_MODEL="SELECTED_UNICHAT_MODEL"
+export UNICHAT_API_KEY="YOUR_UNICHAT_API_KEY"
+# Optional, for an OpenAI-compatible provider with a custom endpoint:
+# export UNICHAT_BASE_URL="https://provider.example.com/v1"
 ```
 
-3. Build package distributions:
+The server reads environment variables; it does not load `.env` files itself. For Claude Desktop, keep these values in the server's `env` configuration shown above.
+
+Run the local server:
+
+```bash
+uv run --locked unichat-mcp-server
+```
+
+This is a stdio MCP server: connect through Claude Desktop or the Inspector below to interact with it. It does not start a web page or an interactive chat prompt. The editable installation is sufficient to run it; to also create source and wheel distributions using the configured Hatchling backend:
+
 ```bash
 uv build
 ```
 
-This will create source and wheel distributions in the `dist/` directory.
+Packages are written to `dist/`. `uv build` supplies the build backend in an isolated environment; a globally installed `build` frontend is unnecessary. Runtime dependencies are locked by `uv.lock`, but the `hatchling` build requirement is not version-pinned in `pyproject.toml`.
 
-4. Publish to PyPI:
+### Normal development
+
+After editing files under `src/`, restart the server or reconnect it in your MCP client:
+
 ```bash
-uv publish --token {{YOUR_PYPI_API_TOKEN}}
+uv run --locked unichat-mcp-server
 ```
+
+The editable installation uses the current source. Ordinary source changes do not require deleting `.venv/`, reinstalling dependencies or rebuilding distribution packages. Run `uv build` again only when you need updated package artifacts. After pulling changes to the dependency manifest and lockfile, run `uv sync --locked` to update the environment to match them.
+
+This repository has no configured automated test suite or watch command. Use the Inspector below to manually exercise tools and prompts, restarting the server after changes.
+
+### Clean rebuild of an existing checkout
+
+Stop the running server and run these commands from the repository root (the directory containing `pyproject.toml` and `uv.lock`). These paths assume uv's default project-local environment: `.venv/` contains installed dependencies and the editable project, and `dist/` contains generated source/wheel archives.
+
+```bash
+rm -rf .venv dist
+uv sync --locked
+uv build
+```
+
+This recreates the environment and distribution packages. Keep `uv.lock`, source, configuration, `.env` files and user data. Other ignored names such as `build/` and `wheels/` are not established outputs of this project's build workflow and are not cleanup targets. Global uv caches and Python installations can be reused. To run again, retain or reapply the environment variables above and use `uv run --locked unichat-mcp-server`.
+
+### Intentional dependency updates
+
+Dependency updates are separate from restoration. When deliberately changing requirements in `pyproject.toml`, run `uv lock` and review the resulting `uv.lock` changes, then run `uv sync --locked`. To deliberately upgrade an existing dependency within its declared constraints, for example:
+
+```bash
+uv lock --upgrade-package unichat
+uv sync --locked
+```
+
+Review the lockfile changes and check server behavior before accepting the update. Routine installation and rebuilding should use the existing lockfile.
+
+### Publishing
+
+Publishing is a separate maintainer action and is not part of local installation or rebuilding. Prepare fresh distributions with the clean-rebuild workflow above and verify that `dist/` contains only the intended release before uploading to PyPI:
+
+```bash
+uv publish --token "YOUR_PYPI_API_TOKEN"
+```
+
+The repository also has a publishing workflow in `.github/workflows/publish.yml`, triggered by changes to `pyproject.toml` on `main` or manual dispatch.
 
 ### Debugging
 
@@ -164,7 +223,7 @@ experience, we strongly recommend using the [MCP Inspector](https://github.com/m
 You can launch the MCP Inspector via [`npm`](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) with this command:
 
 ```bash
-npx @modelcontextprotocol/inspector uv --directory {{your source code local directory}}/unichat-mcp-server run unichat-mcp-server
+npx @modelcontextprotocol/inspector uv --directory "/path/to/unichat-mcp-server" run --locked unichat-mcp-server
 ```
 
 
@@ -173,4 +232,3 @@ Upon launching, the Inspector will display a URL that you can access in your bro
 ## Hosted deployment
 
 A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/amidabuddha-unichat-mcp-server).
-
